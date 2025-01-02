@@ -4,7 +4,7 @@
 # 專案來源
 一個正在進行中的 [jamesstringerparse Easy-GPU-PV repository](https://github.com/jamesstringerparsec/Easy-GPU-PV) 分支。該項目的目標是盡可能簡化整個過程。主要腳本是互動式的，因此用戶不必提前定義任何參數。相反，可以在腳本運行時選擇參數，使過程變得更加簡單。
 
-![Administrator_-PowerShell-2023-03-21-16-38-00](https://user-images.githubusercontent.com/77991615/226651194-032db39b-291a-4cd4-a231-da5a215c9eee.gif)
+![Administrator_-PowerShell-2023-03-21-16-38-00](https://github.com/aliceric27/picx-images-hosting/raw/master/GIF-2025-1-2-下午-07-44-59.99tfgndo79.gif)
 
 ***以下文字主要取自原始的 Easy-GPU-PV 項目。我做了一些修改和改進，以確保它準確反映項目的當前狀態並提供相關信息。***
 
