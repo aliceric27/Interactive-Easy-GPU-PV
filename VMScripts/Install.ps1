@@ -235,7 +235,7 @@ Get-ChildItem -Path C:\ProgramData\Easy-GPU-P -Recurse | Unblock-File
 
 if ($Parsec -eq $true) {
     if ((Test-Path HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Parsec) -eq $false) {
-        (New-Object System.Net.WebClient).DownloadFile("https://builds.parsecgaming.com/package/parsec-windows.exe", "C:\Users\$env:USERNAME\Downloads\Parsec-windows.exe")
+        (New-Object System.Net.WebClient).DownloadFile("https://builds.parsec.app/package/parsec-windows.exe", "C:\Users\$env:USERNAME\Downloads\Parsec-windows.exe")
         Start-Process "C:\Users\$env:USERNAME\Downloads\Parsec-windows.exe" -ArgumentList "/silent", "/shared","/team_id=$team_id","/team_computer_key=$key" -wait
         while (!(Test-Path C:\ProgramData\Parsec\config.txt)) {
             Start-Sleep -s 1
