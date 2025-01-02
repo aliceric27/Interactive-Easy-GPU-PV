@@ -242,7 +242,7 @@ if ($Parsec -eq $true) {
         }
         $configfile  = Get-Content C:\ProgramData\Parsec\config.txt
         $configfile += "host_virtual_monitors = 1"
-        $configfile += "host_privacy_mode = 1"
+        $configfile += "host_privacy_mode = 0"
         $configfile | Out-File C:\ProgramData\Parsec\config.txt -Encoding ascii
         Copy-Item -Path "C:\ProgramData\Easy-GPU-P\Parsec.lnk" -Destination "C:\Users\Public\Desktop"
         try {
