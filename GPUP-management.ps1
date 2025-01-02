@@ -4274,6 +4274,7 @@ If ((Is-Administrator) -and (Get-WindowsCompatibleOS) -and (Get-HyperVEnabled)) 
         4 { Get-VMObjects
             Delete-VMGPUPartitionAdapter }
         5 { Get-VMObjects
+            Get-GPUDedicatedResourcePercentage
             Pass-VMGPUPartitionAdapter -OnlyResources }
     }
     
