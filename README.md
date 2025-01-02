@@ -60,3 +60,4 @@ Interactive-Easy-GPU-PV 的目標是通過自動化啟動 GPU-PV 虛擬機所需
 - [jamesstringerparsec](https://github.com/jamesstringerparsec/Easy-GPU-PV) 創建了 EASY-GPU-PV 項目，該項目作為本 readme 的基礎和主要部分
 - [Hyper-ConvertImage](https://github.com/tabs-not-spaces/Hyper-ConvertImage) 創建了更新版本的 [Convert-WindowsImage](https://github.com/MicrosoftDocs/Virtualization-Documentation/tree/master/hyperv-tools/Convert-WindowsImage)，該版本與 Windows 10 和 11 兼容。
 - [gawainXX](https://github.com/gawainXX) 幫助 [jamesstringerparsec](https://github.com/jamesstringerparsec/Easy-GPU-PV) 測試並指出錯誤和功能改進。
+- [KharchenkoPM](https://github.com/KharchenkoPM/Interactive-Easy-GPU-PV) 建立了原始 EASY-GPU-PV 版本修改後的專案
