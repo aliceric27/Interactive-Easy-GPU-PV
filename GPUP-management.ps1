@@ -3581,6 +3581,7 @@ function Get-VMGpuPartitionAdapterFriendlyName {
         $GPUs.Add($GPUname);
     }
     $m = "選擇 GPU ID [預設: 0] (按 `"Return`" 預設)"
+    Write-Warning "Win10 用戶請選擇 0，否則虛擬機會創建錯誤"
     while ($true) {
         try {
             $s = Read-Host -Prompt $m
@@ -3851,14 +3852,14 @@ function Set-ServerOSGroupPolicies {
 #========================================================================
 function Open-ISOImageDialog {
     param()
-    Write-Host "一個 GUI 對話框可用於幫助您選擇 Windows 磁盤映像 ISO。" 
+    Write-Host "一個 GUI 對話框可用於幫助您選擇 Windows 安裝映像 ISO。" 
     Add-Type -AssemblyName System.Windows.Forms
     
     $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog
     $FileBrowser.Filter = "Windows Disk Image (ISO)|*.iso"
     $FileBrowser.RestoreDirectory = $true
     $FileBrowser.MultiSelect = $false;
-    $FileBrowser.Title = "選擇 Windows 磁盤映像 ISO 用於 VM 客戶端操作系統"
+    $FileBrowser.Title = "選擇 Windows 安裝映像檔 ISO 用於 VM 客戶端操作系統"
     
     if ($FileBrowser.ShowDialog() -eq "OK") {
         $params.SourcePath = $FileBrowser.FileName -replace "\[", "``[" -replace "\]", "``]" 
@@ -4168,20 +4169,20 @@ function Get-VMParams {
         $params.VHDPath = Get-VMHost | Select-Object VirtualHardDiskPath -ExpandProperty VirtualHardDiskPath
     } 
     
-    $VMParam = New-VMParameter -name 'SizeBytes' -title "指定 VM 虛擬硬碟大小 [預設: $($params.SizeBytes / 1Gb)GB] (按 `"Return`" 預設)" -range @(24Gb, 1024Gb) -AllowNull
+    $VMParam = New-VMParameter -name 'SizeBytes' -title "指定 VM 虛擬硬碟大小 [預設: $($params.SizeBytes / 1Gb)GB] <請輸入數字ex:512>(按 `"Return`" 預設)" -range @(24Gb, 1024Gb) -AllowNull
     $null = Get-VMParam -VMParam $VMParam
     
-    $VMParam = New-VMParameter -name 'MemoryAmount' -title "指定 VM 專用 RAM 大小 [預設: $($params.MemoryAmount / 1Gb)GB] (按 `"Return`" 預設)" -range @(2Gb, (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).sum) -AllowNull
+    $VMParam = New-VMParameter -name 'MemoryAmount' -title "指定 VM 專用 RAM 大小 [預設: $($params.MemoryAmount / 1Gb)GB] <請輸入數字ex:16>(按 `"Return`" 預設)" -range @(2Gb, (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).sum) -AllowNull
     $null = Get-VMParam -VMParam $VMParam
     
     $VMParam = New-VMParameter -name 'DynamicMemoryEnabled' -title "啟用動態記憶體? [Y/N] [預設: $(BoolToYesNo $params.DynamicMemoryEnabled)] (按 `"Return`" 啟用)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     $null = Get-VMParam -VMParam $VMParam
     if ($params.DynamicMemoryEnabled -eq $true) {
-        $VMParam = New-VMParameter -name 'MemoryMaximum' -title "指定 VM 動態記憶體最大大小 [預設: $(($params.MemoryMaximum / 1Gb))GB] (按 `"Return`" 預設)" -range @($params.MemoryAmount, 128Gb) -AllowNull
+        $VMParam = New-VMParameter -name 'MemoryMaximum' -title "指定 VM 動態記憶體最大大小 [預設: $(($params.MemoryMaximum / 1Gb))GB] <請輸入數字ex:32> (按 `"Return`" 預設)" -range @($params.MemoryAmount, 128Gb) -AllowNull
         $null = Get-VMParam -VMParam $VMParam
     }
 
-    $VMParam = New-VMParameter -name 'CPUCores' -title "指定 VM 虛擬處理器數量 [預設: $($params.CPUCores)] (按 `"Return`" 預設)" -range @(1, (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors) -AllowNull
+    $VMParam = New-VMParameter -name 'CPUCores' -title "指定 VM 虛擬處理器數量 [預設: $($params.CPUCores)] <請輸入數字ex:6> (按 `"Return`" 預設)" -range @(1, (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors) -AllowNull
     $null = Get-VMParam -VMParam $VMParam
  
     $switch = Get-HyperVSwitchAdapter
