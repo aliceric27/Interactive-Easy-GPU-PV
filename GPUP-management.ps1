@@ -358,7 +358,7 @@ function Is-Administrator {
     $CurrentUser = [Security.Principal.WindowsIdentity]::GetCurrent();
     $IsAdmin = (New-Object Security.Principal.WindowsPrincipal $CurrentUser).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
     if ($IsAdmin -eq $false) {
-        Write-Warning "Administrator rights are required to run the script."
+        Write-Warning "需要管理員權限才能執行此腳本。"
     }
     return $IsAdmin
 }
@@ -373,9 +373,9 @@ function Get-ISOWindowsEditions {
     if ($WinImages.Count -eq 0) {
         return $null
     }
-    Write-Host "Printing Windows editions on the selected disk image... It may take a while..." -ForegroundColor Yellow
+    Write-Host "正在列出所選磁碟映像中的 Windows 版本... 這可能需要一些時間..." -ForegroundColor Yellow
     $Report = @()
-    Write-Host "Index  Edition"
+    Write-Host "索引    版本"
     Write-Host "=====  =======" 
     foreach ($WinImage in $WinImages) {
         $curImage=Get-WindowsImage -ImagePath "$($DriveLetter):\sources\install.wim" -Index $WinImage.ImageIndex
@@ -457,7 +457,7 @@ function SmartExit {
             Exit $null
         } else {
             Write-Host $ExitReason
-            Read-host -Prompt "Press any key to Exit..."
+            Read-host -Prompt "按任意鍵退出..."
             Exit $null
         }
     }
@@ -499,12 +499,12 @@ function New-GPUEnabledVM {
     $VHDPath = ConcatenateVHDPath -VHDPath $VHDPath -VMName $VMName
     
     if ($(Get-VM -Name $VMName -ErrorAction SilentlyContinue) -ne $NULL) {
-        SmartExit -ExitReason "Virtual Machine already exists with name $VMName, please delete existing VM or change VMName"
+        SmartExit -ExitReason "已存在名為 $VMName 的虛擬機器，請刪除現有的虛擬機器或更改虛擬機器名稱"
     }
     if (Test-Path $vhdPath) {
-        SmartExit -ExitReason "Virtual Machine Disk already exists at $vhdPath, please delete existing VHDX or change VMName"
+        SmartExit -ExitReason "虛擬機器磁碟已存在於 $vhdPath，請刪除現有的 VHDX 或更改虛擬機器名稱"
     }
-    Write-Host "Virtual Machine is creating... It may take a long time..." -ForegroundColor Yellow
+    Write-Host "虛擬機器正在建立中... 這可能需要很長的時間..." -ForegroundColor Yellow
     $unattendPath = Modify-AutoUnattend -username "$username" -password "$password" -autologon $autologon -hostname $VMName -CopyRegionalSettings $CopyRegionalSettings -xml $unattend
     $MaxAvailableVersion = (Get-VMHostSupportedVersion).Version | Where-Object {$_.Major -lt 254} | Select-Object -Last 1 
     Convert-WindowsImage -SourcePath $SourcePath -ISODriveLetter $DriveLetter -Edition $Edition -VHDFormat $Vhdformat -VHDPath $VhdPath -DiskLayout $DiskLayout -UnattendPath $UnattendPath -Parsec:$Parsec -ParsecVDD:$ParsecVDD -DisableHVDD:$DisableHVDD -RDP:$RDP -NumLock:$NumLock -GPUName $GPUName -Team_ID $Team_ID -Key $Key -SizeBytes $SizeBytes | Out-Null
@@ -532,13 +532,13 @@ function New-GPUEnabledVM {
         $Global:VM | Add-VMDvdDrive -Path $SourcePath 
         $Global:VHD = $Global:VM | Get-VMHardDiskDrive
         Pass-VMGPUPartitionAdapter
-        Write-W2VInfo "Starting and connecting to VM"
+        Write-W2VInfo "開始連接到虛擬機器"
         if ($Global:ServerOS -eq $true) {
             Set-ServerOSGroupPolicies
         }
         vmconnect localhost $VMName
     } else {
-        SmartExit -ExitReason "Failed to create VHDX, stopping script"
+        SmartExit -ExitReason "無法建立 VHDX，停止腳本"
     }
 }
 #========================================================================
@@ -1468,7 +1468,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $null = Start-Transcript -Path (Join-Path $logFolder "Convert-WindowsImageTranscript.txt") -Force -ErrorAction SilentlyContinue
                 $transcripting = $true
             } catch {
-                Write-W2VWarn "Transcription is already running.    No Convert-WindowsImage-specific transcript will be created."
+                Write-W2VWarn "轉錄已在執行中。將不會建立 Convert-WindowsImage 專用的轉錄。"
                 $transcripting = $false
             }
             #
@@ -1477,18 +1477,18 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             Add-WindowsImageTypes
             # Check to make sure we're running as Admin.
             if (!(Test-Admin)) {
-                throw "Images can only be applied by an administrator.    Please launch PowerShell elevated and run this script again."
+                throw "映像檔只能由系統管理員套用。請以系統管理員身分執行 PowerShell 並重新執行此腳本。"
             }
             # Check to make sure we're running on Win8.
             if (!(Test-WindowsVersion))  {
-                throw "$scriptName requires Windows 8 Consumer Preview or higher.    Please use WIM2VHD.WSF (http://code.msdn.microsoft.com/wim2vhd) if you need to create VHDs from Windows 7."
+                throw "$scriptName 需要 Windows 8 Consumer Preview 或更高版本。請使用 WIM2VHD.WSF (http://code.msdn.microsoft.com/wim2vhd) 從 Windows 7 建立 VHD。"
             }
             # Resolve the path for the unattend file.
             if (![string]::IsNullOrEmpty($UnattendPath)) {
                 $UnattendPath = (Resolve-Path $UnattendPath).Path
             }
             if ($ShowUI) {
-                Write-W2VInfo "Launching UI..."
+                Write-W2VInfo "啟動 UI..."
                 Add-Type -AssemblyName System.Drawing,System.Windows.Forms
                 #region Form Objects
                 $frmMain = New-Object System.Windows.Forms.Form
@@ -1526,12 +1526,12 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 }
                 $btnWrkBrowse_OnClick = {
                     $openFolderDialog1.RootFolder = "Desktop"
-                    $openFolderDialog1.Description = "Select the folder you'd like your VHD(X) to be created in."
+                    $openFolderDialog1.Description = "請選擇要建立 VHD(X) 檔案的資料夾。"
                     $openFolderDialog1.SelectedPath = $WorkingDirectory
                     $ret = $openFolderDialog1.ShowDialog()
                     if ($ret -ilike "ok") {
                         $WorkingDirectory = $txtWorkingDirectory = $openFolderDialog1.SelectedPath
-                        Write-W2VInfo "Selected Working Directory is $WorkingDirectory..."
+                        Write-W2VInfo "選擇的目錄是 $WorkingDirectory..."
                     }
                 }
                 $btnUnattendBrowse_OnClick = {
@@ -1542,7 +1542,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     $openFileDialog1.CheckPathExists = $true
                     $openFileDialog1.FileName = $null
                     $openFileDialog1.ShowHelp = $false
-                    $openFileDialog1.Title = "Select an unattend file..."
+                    $openFileDialog1.Title = "選擇一個預先準備好的自動化配置檔案..."
                     $ret = $openFileDialog1.ShowDialog()
                     if ($ret -ilike "ok") {
                         $UnattendPath = $txtUnattendFile.Text = $openFileDialog1.FileName
@@ -1556,36 +1556,36 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     $openFileDialog1.CheckPathExists = $true
                     $openFileDialog1.FileName = $null
                     $openFileDialog1.ShowHelp = $false
-                    $openFileDialog1.Title = "Select a source file..."
+                    $openFileDialog1.Title = " 選擇一個來源檔案..."
                     $ret = $openFileDialog1.ShowDialog()
                     if ($ret -ilike "ok") {
                         if (([IO.FileInfo]$openFileDialog1.FileName).Extension -ilike ".iso") {
                             if (Test-IsNetworkLocation $openFileDialog1.FileName) {
-                                Write-W2VInfo "Copying ISO $(Split-Path $openFileDialog1.FileName -Leaf) to temp folder..."
-                                Write-W2VWarn "The UI may become non-responsive while this copy takes place..."
+                                Write-W2VInfo "複製 ISO $(Split-Path $openFileDialog1.FileName -Leaf) 到暫存資料夾..."
+                                Write-W2VWarn "UI 可能會變得無法回應，直到複製完成..."
                                 Copy-Item -Path $openFileDialog1.FileName -Destination $TempDirectory -Force
                                 $openFileDialog1.FileName = "$($TempDirectory)\$(Split-Path $openFileDialog1.FileName -Leaf)"
                             }
                             $txtSourcePath.Text = $isoPath = (Resolve-Path $openFileDialog1.FileName).Path
-                            Write-W2VInfo "Opening ISO $(Split-Path $isoPath -Leaf)..."
+                            Write-W2VInfo "開啟 ISO $(Split-Path $isoPath -Leaf)..."
                             $script:SourcePath = "$($driveLetter):\sources\install.wim"
                             # Check to see if there's a WIM file we can muck about with.
-                            Write-W2VInfo "Looking for $($SourcePath)..."
+                            Write-W2VInfo "尋找 $($SourcePath)..."
                             if (!(Test-Path $SourcePath)) {
-                                throw "The specified ISO does not appear to be valid Windows installation media."
+                                throw "指定的 ISO 似乎不是有效的 Windows 安裝媒體。"
                             }
                         } else {
                             $txtSourcePath.Text = $script:SourcePath = $openFileDialog1.FileName
                         }
                         # Check to see if the WIM is local, or on a network location.    If the latter, copy it locally.
                         if (Test-IsNetworkLocation $SourcePath){
-                            Write-W2VInfo "Copying WIM $(Split-Path $SourcePath -Leaf) to temp folder..."
-                            Write-W2VWarn "The UI may become non-responsive while this copy takes place..."
+                            Write-W2VInfo "複製 WIM $(Split-Path $SourcePath -Leaf) 到暫存資料夾..."
+                            Write-W2VWarn "UI 可能會變得無法回應，直到複製完成..."
                             Copy-Item -Path $SourcePath -Destination $TempDirectory -Force
                             $txtSourcePath.Text = $script:SourcePath = "$($TempDirectory)\$(Split-Path $SourcePath -Leaf)"
                         }
                         $script:SourcePath = (Resolve-Path $SourcePath).Path
-                        Write-W2VInfo "Scanning WIM metadata..."
+                        Write-W2VInfo "掃描 WIM 元數據..."
                         $tempOpenWim = $null
                         try {
                             $tempOpenWim = New-Object WIM2VHD.WimFile $SourcePath
@@ -1594,8 +1594,8 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                                 $tempOpenWim.ImageNames.Contains("Windows Longhorn Server") -or
                                 $tempOpenWim.ImageNames.Contains("Windows Longhorn Server Core")){
                                 [Windows.Forms.MessageBox]::Show(
-                                    "Convert-WindowsImage cannot run against unstaged builds. Please try again with a staged build.",
-                                    "WIM is incompatible!",
+                                    "Convert-WindowsImage 無法對未分階的版本運行。請使用已分階的版本再次嘗試。",
+                                    "WIM 不相容！",
                                     "OK",
                                     "Error"
                                 )
@@ -1606,10 +1606,10 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                             }
 
                         } catch {
-                            throw "Unable to load WIM metadata!"
+                            throw "無法載入 WIM 元數據！"
                         } finally {
                             $tempOpenWim.Close()
-                            Write-W2VTrace "Closing WIM metadata..."
+                            Write-W2VTrace "關閉 WIM 元數據..."
                         }
                     }
                 }
@@ -1642,7 +1642,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $frmMain.MinimizeBox = $false
                 $frmMain.Name = "frmMain"
                 $frmMain.StartPosition = 1
-                $frmMain.Text = "Convert-WindowsImage UI"
+                $frmMain.Text = "Windows映像檔轉換工具"
                 #endregion frmMain
 
                 #region groupBox4
@@ -1658,7 +1658,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $groupBox4.Size = $System_Drawing_Size
                 $groupBox4.TabIndex = 8
                 $groupBox4.TabStop = $false
-                $groupBox4.Text = "4. Make the VHD!"
+                $groupBox4.Text = "4. 建立 VHD!"
                 $frmMain.Controls.Add($groupBox4)
                 #endregion groupBox4
 
@@ -1674,7 +1674,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Width = 415
                 $btnGo.Size = $System_Drawing_Size
                 $btnGo.TabIndex = 0
-                $btnGo.Text = "&Make my VHD"
+                $btnGo.Text = "&建立 VHD"
                 $btnGo.UseVisualStyleBackColor = $true
                 $btnGo.DialogResult = "OK"
                 $btnGo.add_Click($btnGo_OnClick)
@@ -1695,7 +1695,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $groupBox3.Size = $System_Drawing_Size
                 $groupBox3.TabIndex = 7
                 $groupBox3.TabStop = $false
-                $groupBox3.Text = "3. Choose configuration options"
+                $groupBox3.Text = "3. 選擇配置選項"
                 $frmMain.Controls.Add($groupBox3)
                 #endregion groupBox3
 
@@ -1740,7 +1740,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Height = 23
                 $System_Drawing_Size.Width = 175
                 $label7.Size = $System_Drawing_Size
-                $label7.Text = "Unattend File (Optional)"
+                $label7.Text = "自動化配置檔案 (選擇性)"
                 $groupBox3.Controls.Add($label7)
                 #endregion label7
 
@@ -1755,7 +1755,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Height = 23
                 $System_Drawing_Size.Width = 175
                 $label6.Size = $System_Drawing_Size
-                $label6.Text = "VHD Name (Optional)"
+                $label6.Text = "VHD 名稱 (選擇性)"
                 $groupBox3.Controls.Add($label6)
                 #endregion label6
 
@@ -1862,7 +1862,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Width = 264
                 $label5.Size = $System_Drawing_Size
                 $label5.TabIndex = 8
-                $label5.Text = "Working Directory"
+                $label5.Text = "工作目錄"
                 $groupBox3.Controls.Add($label5)
                 #endregion label5
 
@@ -1894,7 +1894,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Width = 86
                 $label4.Size = $System_Drawing_Size
                 $label4.TabIndex = 6
-                $label4.Text = "VHD Size"
+                $label4.Text = "VHD 大小"
                 $groupBox3.Controls.Add($label4)
                 #endregion label4
 
@@ -1910,7 +1910,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Width = 92
                 $label3.Size = $System_Drawing_Size
                 $label3.TabIndex = 3
-                $label3.Text = "VHD Type"
+                $label3.Text = "VHD 類型"
                 $groupBox3.Controls.Add($label3)
                 #endregion label3
 
@@ -1926,7 +1926,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $System_Drawing_Size.Width = 118
                 $label2.Size = $System_Drawing_Size
                 $label2.TabIndex = 1
-                $label2.Text = "VHD Format"
+                $label2.Text = "VHD 格式"
                 $groupBox3.Controls.Add($label2)
                 #endregion label2
 
@@ -1943,7 +1943,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $groupBox2.Size = $System_Drawing_Size
                 $groupBox2.TabIndex = 6
                 $groupBox2.TabStop = $false
-                $groupBox2.Text = "2. Choose a SKU from the list"
+                $groupBox2.Text = "2. 選擇 SKU 從列表"
                 $frmMain.Controls.Add($groupBox2)
                 #endregion groupBox2
 
@@ -1992,7 +1992,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $groupBox1.Size = $System_Drawing_Size
                 $groupBox1.TabIndex = 4
                 $groupBox1.TabStop = $false
-                $groupBox1.Text = "1. Choose a source"
+                $groupBox1.Text = "1. 選擇來源"
                 $frmMain.Controls.Add($groupBox1)
                 #endregion groupBox1
 
@@ -2043,10 +2043,10 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $ret = $frmMain.ShowDialog()
 
                 if (!($ret -ilike "OK")) {
-                    throw "Form session has been cancelled."
+                    throw "表單會話已取消。"
                 }
                 if ([string]::IsNullOrEmpty($SourcePath)) {
-                    throw "No source path specified."
+                    throw "未指定來源路徑。"
                 }
 
                 # VHD Format
@@ -2090,7 +2090,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             # There's a difference between the maximum sizes for VHDs and VHDXs.    Make sure we follow it.
             if ("VHD" -ilike $VHDFormat) {
                 if ($SizeBytes -gt $vhdMaxSize) {
-                    Write-W2VWarn "For the VHD file format, the maximum file size is ~2040GB.    We're automatically setting the size to 2040GB for you."
+                    Write-W2VWarn "對於 VHD 文件格式，最大文件大小約為 2040GB。我們將自動將大小設置為 2040GB。"
                     $SizeBytes = 2040GB
                 }
 
@@ -2101,8 +2101,8 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             if ((![string]::IsNullOrEmpty($VHDPath)) -and (![string]::IsNullOrEmpty($WorkingDirectory))) {
                 if ($WorkingDirectory -ne $pwd) {
                     # If the WorkingDirectory is anything besides $pwd, tell people that the WorkingDirectory is being ignored.
-                    Write-W2VWarn "Specifying -VHDPath and -WorkingDirectory at the same time is contradictory."
-                    Write-W2VWarn "Ignoring the WorkingDirectory specification."
+                    Write-W2VWarn "同時指定 -VHDPath 和 -WorkingDirectory 是矛盾的。"
+                    Write-W2VWarn "忽略 WorkingDirectory 的指定。"
                     $WorkingDirectory = Split-Path $VHDPath -Parent
                 }
             }
@@ -2111,7 +2111,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $ext = ([IO.FileInfo]$VHDPath).Extension
 
                 if (!($ext -ilike ".$($VHDFormat)")) {
-                    throw "There is a mismatch between the VHDPath file extension ($($ext.ToUpper())), and the VHDFormat (.$($VHDFormat)).    Please ensure that these match and try again."
+                    throw "VHDPath 的文件擴展名 ($($ext.ToUpper())) 與 VHDFormat (.$($VHDFormat)) 不匹配。請確保這些匹配並再次嘗試。"
                 }
             }
 
@@ -2129,14 +2129,14 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $vhdFinalName = Split-Path $VHDPath -Leaf
                 $VHDPath = Join-Path (Split-Path $VHDPath -Parent) "$($sessionKey).$($VHDFormat.ToLower())"
             }
-            Write-W2VTrace "Temporary $VHDFormat path is : $VHDPath"
+            Write-W2VTrace "臨時 $VHDFormat 路徑是 : $VHDPath"
 
             # If we're using an ISO, mount it and get the path to the WIM file.
             if (([IO.FileInfo]$SourcePath).Extension -ilike ".ISO") {
                 # If the ISO isn't local, copy it down so we don't have to worry about resource contention
                 # or about network latency.
                 if (Test-IsNetworkLocation $SourcePath) {
-                    Write-W2VError "ISO Path cannot be network location"
+                    Write-W2VError "ISO 路徑不能是網路位置"
                     #Write-W2VInfo "Copying ISO $(Split-Path $SourcePath -Leaf) to temp folder..."
                     #robocopy $(Split-Path $SourcePath -Parent) $TempDirectory $(Split-Path $SourcePath -Leaf) | Out-Null
                     #$SourcePath = "$($TempDirectory)\$(Split-Path $SourcePath -Leaf)"
@@ -2144,7 +2144,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 }
                 $isoPath = (Resolve-Path $SourcePath).Path
 
-                Write-W2VInfo "Opening ISO $(Split-Path $isoPath -Leaf)..."
+                Write-W2VInfo "開啟 ISO $(Split-Path $isoPath -Leaf)..."
                 <#
                                 $openIso         = Mount-DiskImage -ImagePath $isoPath -StorageType ISO -PassThru
                                 # Refresh the DiskImage object so we can get the real information about it.    I assume this is a bug.
@@ -2154,22 +2154,22 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 $SourcePath = "$($DriveLetter):\sources\install.wim"
 
                 # Check to see if there's a WIM file we can muck about with.
-                Write-W2VInfo "Looking for $($SourcePath)..."
+                Write-W2VInfo "尋找 $($SourcePath)..."
                 if (!(Test-Path $SourcePath)) {
-                    throw "The specified ISO does not appear to be valid Windows installation media."
+                    throw "指定的 ISO 似乎不是有效的 Windows 安裝媒體。"
                 }
             }
 
             # Check to see if the WIM is local, or on a network location.    If the latter, copy it locally.
             if (Test-IsNetworkLocation $SourcePath) {
-                Write-W2VInfo "Copying WIM $(Split-Path $SourcePath -Leaf) to temp folder..."
+                Write-W2VInfo "複製 WIM $(Split-Path $SourcePath -Leaf) 到臨時文件夾..."
                 robocopy $(Split-Path $SourcePath -Parent) $TempDirectory $(Split-Path $SourcePath -Leaf) | Out-Null
                 $SourcePath = "$($TempDirectory)\$(Split-Path $SourcePath -Leaf)"
 
                 $tempSource = $SourcePath
             }
             $SourcePath = (Resolve-Path $SourcePath).Path
-            Write-W2VInfo "Looking for the requested Windows image in the WIM file"
+            Write-W2VInfo "尋找請求的 Windows 映像檔在 WIM 文件中"
             $WindowsImage = Get-WindowsImage -ImagePath "$($driveLetter):\sources\install.wim"
             if (-not $WindowsImage -or ($WindowsImage -is [System.Array])) {
                 $EditionIndex = 0;
@@ -2179,14 +2179,14 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     $WindowsImage = Get-WindowsImage -ImagePath $SourcePath | Where-Object { $_.ImageName -ilike "*$($Edition)" }
                 }
                 if (-not $WindowsImage) {
-                    throw "Requested windows Image was not found on the WIM file!"
+                    throw "請求的 Windows 映像檔未在 WIM 文件中找到!"
                 }
                 if ($WindowsImage -is [System.Array]) {
-                    Write-W2VInfo "WIM file has the following $($WindowsImage.Count) images that match filter *$($Edition)"
+                    Write-W2VInfo "WIM 文件有以下 $($WindowsImage.Count) 個映像檔符合過濾器 *$($Edition)"
                     Get-WindowsImage -ImagePath $SourcePath
 
-                    Write-W2VError "You must specify an Edition or SKU index, since the WIM has more than one image."
-                    throw "There are more than one images that match ImageName filter *$($Edition)"
+                    Write-W2VError "您必須指定一個 Edition 或 SKU 索引，因為 WIM 有多個映像檔。"
+                    throw "有更多個映像檔符合 ImageName 過濾器 *$($Edition)"
                 }
             }
             $ImageIndex = $WindowsImage[0].ImageIndex
@@ -2197,26 +2197,26 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             $openWim = New-Object WIM2VHD.WimFile $SourcePath
             $openImage = $openWim[[int32]$ImageIndex]
             if ($null -eq $openImage) {
-                Write-W2VError "The specified edition does not appear to exist in the specified WIM."
-                Write-W2VError "Valid edition names are:"
+                Write-W2VError "指定的版本似乎不存在於指定的 WIM 中。"
+                Write-W2VError "有效的版本名稱是:"
                 $openWim.Images | ForEach-Object { Write-W2VError "    $($_.ImageFlags)" }
                 throw
             }
-            Write-W2VInfo "Image $($openImage.ImageIndex) selected ($($openImage.ImageFlags))..."
+            Write-W2VInfo "選擇映像檔 $($openImage.ImageIndex) ($($openImage.ImageFlags))..."
 
             # Check to make sure that the image we're applying is Windows 7 or greater.
             if ($openImage.ImageVersion -lt $lowestSupportedVersion) {
                 if ($openImage.ImageVersion -eq "0.0.0.0") {
-                    Write-W2VWarn "The specified WIM does not encode the Windows version."
+                    Write-W2VWarn "指定的 WIM 不編碼 Windows 版本。"
                 } else {
-                    throw "Convert-WindowsImage only supports Windows 7 and Windows 8 WIM files.    The specified image (version $($openImage.ImageVersion)) does not appear to contain one of those operating systems."
+                    throw "Convert-WindowsImage 只支持 Windows 7 和 Windows 8 WIM 文件。指定的映像檔 (版本 $($openImage.ImageVersion)) 似乎不包含其中之一。"
                 }
             }
             if ($hyperVEnabled) {
-                Write-W2VInfo "Creating sparse disk..."
+                Write-W2VInfo "建立稀疏磁碟..."
                 $newVhd = New-VHD -Path $VHDPath -SizeBytes $SizeBytes -BlockSizeBytes $BlockSizeBytes -Dynamic
 
-                Write-W2VInfo "Mounting $VHDFormat..."
+                Write-W2VInfo "掛載 $VHDFormat..."
                 $disk = $newVhd | Mount-VHD -Passthru | Get-Disk
             } else {
             <#
@@ -2230,7 +2230,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 VirtDisk APIs directly.
              #>
 
-                Write-W2VInfo "Creating sparse disk..."
+                Write-W2VInfo "建立稀疏磁碟..."
                 [WIM2VHD.VirtualHardDisk]::CreateSparseDisk(
                     $VHDFormat,
                     $VHDPath,
@@ -2238,46 +2238,46 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     $true
                 )
                 # Attach the VHD.\
-                Write-W2VInfo "Attaching $VHDFormat..."
+                Write-W2VInfo "掛載 $VHDFormat..."
                 $disk = Mount-DiskImage -ImagePath $VHDPath -Passthru | Get-DiskImage | Get-Disk
             }
 
             switch ($DiskLayout) {
                 "BIOS" {
-                    Write-W2VInfo "Initializing disk..."
+                    Write-W2VInfo "初始化磁碟..."
                     Initialize-Disk -Number $disk.Number -PartitionStyle MBR
                     #
                     # Create the Windows/system partition
                     #
-                    Write-W2VInfo "Creating single partition..."
+                    Write-W2VInfo "創建單一分區..."
                     $systemPartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -MbrType IFS -IsActive
                     $windowsPartition = $systemPartition
-                    Write-W2VInfo "Formatting windows volume..."
+                    Write-W2VInfo "格式化 Windows 卷..."
                     $systemVolume = Format-Volume -Partition $systemPartition -FileSystem NTFS -Force -Confirm:$false
                     $windowsVolume = $systemVolume
                 }
 
                 "UEFI" {
-                    Write-W2VInfo "Initializing disk..."
+                    Write-W2VInfo "初始化磁碟..."
                     Initialize-Disk -Number $disk.Number -PartitionStyle GPT
                     if ((Get-WindowsBuildNumber) -ge 10240) {
                         #
                         # Create the system partition.    Create a data partition so we can format it, then change to ESP
                         #
-                        Write-W2VInfo "Creating EFI system partition..."
+                        Write-W2VInfo "創建 EFI 系統分區..."
                         $systemPartition = New-Partition -DiskNumber $disk.Number -Size 200MB -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
-                        Write-W2VInfo "Formatting system volume..."
+                        Write-W2VInfo "格式化系統卷..."
                         $systemVolume = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
-                        Write-W2VInfo "Setting system partition as ESP..."
+                        Write-W2VInfo "設置系統分區為 ESP..."
                         $systemPartition | Set-Partition -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}'
                         $systemPartition | Add-PartitionAccessPath -AssignDriveLetter
                     } else {
                         #
                         # Create the system partition
                         #
-                        Write-W2VInfo "Creating EFI system partition (ESP)..."
+                        Write-W2VInfo "創建 EFI 系統分區 (ESP)..."
                         $systemPartition = New-Partition -DiskNumber $disk.Number -Size 200MB -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}' -AssignDriveLetter
-                        Write-W2VInfo "Formatting ESP..."
+                        Write-W2VInfo "格式化 ESP..."
                         $formatArgs = @(
                             "$($systemPartition.DriveLetter):",# Partition drive letter
                             "/FS:FAT32",# File system
@@ -2290,36 +2290,36 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     #
                     # Create the reserved partition
                     #
-                    Write-W2VInfo "Creating MSR partition..."
+                    Write-W2VInfo "創建 MSR 分區..."
                     $reservedPartition = New-Partition -DiskNumber $disk.Number -Size 128MB -GptType '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
 
                     #
                     # Create the Windows partition
                     #
-                    Write-W2VInfo "Creating windows partition..."
+                    Write-W2VInfo "創建 Windows 分區..."
                     $windowsPartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
 
-                    Write-W2VInfo "Formatting windows volume..."
+                    Write-W2VInfo "格式化 Windows 卷..."
                     $windowsVolume = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
                 }
 
                 "WindowsToGo" {
-                    Write-W2VInfo "Initializing disk..."
+                    Write-W2VInfo "初始化磁碟..."
                     Initialize-Disk -Number $disk.Number -PartitionStyle MBR
                     #
                     # Create the system partition
                     #
-                    Write-W2VInfo "Creating system partition..."
+                    Write-W2VInfo "創建系統分區..."
                     $systemPartition = New-Partition -DiskNumber $disk.Number -Size 350MB -MbrType FAT32 -IsActive
 
-                    Write-W2VInfo "Formatting system volume..."
+                    Write-W2VInfo "格式化系統卷..."
                     $systemVolume = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
                     #
                     # Create the Windows partition
                     #
-                    Write-W2VInfo "Creating windows partition..."
+                    Write-W2VInfo "創建 Windows 分區..."
                     $windowsPartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -MbrType IFS
-                    Write-W2VInfo "Formatting windows volume..."
+                    Write-W2VInfo "格式化 Windows 卷..."
                     $windowsVolume = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
                 }
             }
@@ -2341,24 +2341,24 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 }
             } while ($attempts -le 100 -and -not ($assigned))
             if (-not ($assigned)) {
-                throw "Unable to get Partition after retry"
+                throw "無法在重試後獲取分區"
             }
             $windowsDrive = $(Get-Partition -Volume $windowsVolume).AccessPaths[0].substring(0,2)
-            Write-W2VInfo "Windows path ($windowsDrive) has been assigned."
-            Write-W2VInfo "Windows path ($windowsDrive) took $attempts attempts to be assigned."
+            Write-W2VInfo "Windows path ($windowsDrive) 已分配。"
+            Write-W2VInfo "Windows path ($windowsDrive) 經過 $attempts 次嘗試被分配。"
 
             #
             # Refresh access paths (we have now formatted the volume)
             #
             $systemPartition = $systemPartition | Get-Partition
             $systemDrive = $systemPartition.AccessPaths[0].trimend("\").Replace("\?","??")
-            Write-W2VInfo "System volume location: $systemDrive"
+            Write-W2VInfo "系統卷位置: $systemDrive"
 
             ####################################################################################################
             # APPLY IMAGE FROM WIM TO THE NEW VHD
             ####################################################################################################
 
-            Write-W2VInfo "Applying image to $VHDFormat. This could take a while..."
+            Write-W2VInfo "將映像檔應用於 $VHDFormat。這可能需要一段時間..."
             if ((Get-Command Expand-WindowsImage -ErrorAction SilentlyContinue) -and ((-not $ApplyEA) -and ([string]::IsNullOrEmpty($DismPath)))) {
                 Expand-WindowsImage -ApplyPath $windowsDrive -ImagePath $SourcePath -Index $ImageIndex -LogPath "$($logFolder)\DismLogs.log" | Out-Null
             } else {
@@ -2374,25 +2374,25 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 }
 
                 $dismArgs = @("$applyImage /ImageFile:`"$SourcePath`" /Index:$ImageIndex /ApplyDir:$windowsDrive /LogPath:`"$($logFolder)\DismLogs.log`"")
-                Write-W2VInfo "Applying image: $dismPath $dismArgs"
+                Write-W2VInfo "應用映像檔: $dismPath $dismArgs"
                 $process = Start-Process -Passthru -Wait -NoNewWindow -FilePath $dismPath `
                      -ArgumentList $dismArgs `
 
                 if ($process.ExitCode -ne 0) {
-                    throw "Image Apply failed! See DismImageApply logs for details"
+                    throw "映像檔應用失敗！請查看 DismImageApply 日誌以獲取詳細信息"
                 }
             }
-            Write-W2VInfo "Image was applied successfully. "
+            Write-W2VInfo "映像檔應用成功。"
 
             #
             # Here we copy in the unattend file (if specified by the command line)
             #
             if (![string]::IsNullOrEmpty($UnattendPath)) {
-                Write-W2VInfo "Applying unattend file ($(Split-Path $UnattendPath -Leaf))..."
+                Write-W2VInfo "應用自動配置文件 ($(Split-Path $UnattendPath -Leaf))..."
                 Copy-Item -Path $UnattendPath -Destination (Join-Path $windowsDrive "unattend.xml") -Force
             }
             if (![string]::IsNullOrEmpty($MergeFolderPath)) {
-                Write-W2VInfo "Applying merge folder ($MergeFolderPath)..."
+                Write-W2VInfo "應用合併文件夾 ($MergeFolderPath)..."
                 Copy-Item -Recurse -Path (Join-Path $MergeFolderPath "*") -Destination $windowsDrive -Force #added to handle merge folders
             }
             if (($openImage.ImageArchitecture -ne "ARM") -and # No virtualization platform for ARM images
@@ -2400,11 +2400,11 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 ($BCDinVHD -ne "NativeBoot")) # User asked for a non-bootable image
             {
                 if (Test-Path "$($systemDrive)\boot\bcd") {
-                    Write-W2VInfo "Image already has BIOS BCD store..."
+                    Write-W2VInfo "映像檔已經有 BIOS BCD 存儲..."
                 } elseif (Test-Path "$($systemDrive)\efi\microsoft\boot\bcd") {
-                    Write-W2VInfo "Image already has EFI BCD store..."
+                    Write-W2VInfo "映像檔已經有 EFI BCD 存儲..."
                 } else  {
-                    Write-W2VInfo "Making image bootable..."
+                    Write-W2VInfo "使映像檔可啟動..."
                     $bcdBootArgs = @(
                         "$($windowsDrive)\Windows",# Path to the \Windows on the VHD
                         "/s $systemDrive",# Specifies the volume letter of the drive to create the \BOOT folder on.
@@ -2429,7 +2429,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     # The following is added to mitigate the VMM diff disk handling
                     # We're going to change from MBRBootOption to LocateBootOption.
                     if ($DiskLayout -eq "BIOS") {
-                        Write-W2VInfo "Fixing the Device ID in the BCD store on $($VHDFormat)..."
+                        Write-W2VInfo "修復 $($VHDFormat) 上的 BCD 存儲中的設備 ID..."
                         Run-Executable -Executable "BCDEDIT.EXE" -Arguments (
                             "/store $($systemDrive)\boot\bcd",
                             "/set `{bootmgr`} device locate"
@@ -2444,7 +2444,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                         )
                     }
                 }
-                Write-W2VInfo "Drive is bootable. Cleaning up..."
+                Write-W2VInfo "磁碟可啟動。清理中..."
 
                 # Are we turning the debugger on?
                 if ($EnableDebugger -inotlike "None") {
@@ -2490,7 +2490,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                     )
                     foreach ($bcdStore in $bcdStores) {
                         if (Test-Path $bcdStore) {
-                            Write-W2VInfo "Turning kernel debugging on in the $($VHDFormat) for $($bcdStore)..."
+                            Write-W2VInfo "在 $($VHDFormat) 上啟用內核調試 $($bcdStore)..."
                             Run-Executable -Executable "BCDEDIT.EXE" -Arguments (
                                 "/store $($bcdStore)",
                                 "/set `{default`} debug on"
@@ -2504,42 +2504,42 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 # Don't bother to check on debugging.    We can't boot WoA VHDs in VMs, and
                 # if we're native booting, the changes need to be made to the BCD store on the
                 # physical computer's boot volume.
-                Write-W2VInfo "Image applied. It is not bootable."
+                Write-W2VInfo "映像檔已應用。它不可啟動。"
             }
 
             if ($RDP -or (-not $ExpandOnNativeBoot)) {
                 $hiveSystem   = Mount-RegistryHive -Hive (Join-Path $windowsDrive "Windows\System32\Config\System")
                 if ($RDP) {
-                    Write-W2VInfo "Enabling Remote Desktop"
+                    Write-W2VInfo "啟用遠程桌面"
                     Set-W2VItemProperty -Path "HKLM:\$($hiveSystem)\ControlSet001\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
                     Set-W2VItemProperty -Path "HKLM:\$($hiveSystem)\ControlSet001\Control\Terminal Server\WinStations\RDP-Tcp"  -Name "UserAuthentication" -Value 0
                 }
                 if (-not $ExpandOnNativeBoot) {
-                    Write-W2VInfo "Disabling automatic $VHDFormat expansion for Native Boot"
+                    Write-W2VInfo "禁用自動 $VHDFormat 擴展以進行原生啟動"
                     Set-W2VItemProperty -Path "HKLM:\$($hiveSystem)\ControlSet001\Services\FsDepends\Parameters" -Name "VirtualDiskExpandOnMount" -Value 4
                 }
                 Dismount-RegistryHive -HiveMountPoint $hiveSystem
             }
 
             if ($Driver) {
-                Write-W2VInfo "Adding Windows Drivers to the Image"
+                Write-W2VInfo "將 Windows 驅動程序添加到映像檔中"
                 $Driver | ForEach-Object -Process {
-                    Write-W2VInfo "Driver path: $PSItem"
+                    Write-W2VInfo "驅動程序路徑: $PSItem"
                     Add-WindowsDriver -Path $windowsDrive -Recurse -Driver $PSItem -Verbose | Out-Null
                 }
             }
 
             if ($Feature) {
-                Write-W2VInfo "Installing Windows Feature(s) $Feature to the Image"
+                Write-W2VInfo "安裝 Windows 功能 $Feature 到映像檔中"
                 $FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath "sources\sxs"
-                Write-W2VInfo "From $FeatureSourcePath"
+                Write-W2VInfo "從 $FeatureSourcePath"
                 Enable-WindowsOptionalFeature -FeatureName $Feature -Source $FeatureSourcePath -Path $windowsDrive -All | Out-Null
             }
 
             if ($Package) {
-                Write-W2VInfo "Adding Windows Packages to the Image"
+                Write-W2VInfo "將 Windows 包添加到映像檔中"
                 $Package | ForEach-Object -Process {
-                    Write-W2VInfo "Package path: $PSItem"
+                    Write-W2VInfo "包路徑: $PSItem"
                     Add-WindowsPackage -Path $windowsDrive -PackagePath $PSItem | Out-Null
                 }
             }
@@ -2552,7 +2552,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             }
 
             if ($Parsec -eq $true) {
-                Write-W2VInfo "Setting up Parsec to install at boot"
+                Write-W2VInfo "設置 Parsec 以在啟動時安裝"
             }
             
             if (($Parsec -eq $true) -or ($RDP -eq $true) -or ($NumLock -eq $true)) {
@@ -2565,7 +2565,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
 
             if ([string]::IsNullOrEmpty($vhdFinalName)) {
                 # We need to generate a file name.
-                Write-W2VInfo "Generating name for $($VHDFormat)..."
+                Write-W2VInfo "生成 $($VHDFormat) 的名稱..."
                 $hive = Mount-RegistryHive -Hive (Join-Path $windowsDrive "Windows\System32\Config\Software")
                 $buildLabEx = (Get-ItemProperty "HKLM:\$($hive)\Microsoft\Windows NT\CurrentVersion").BuildLabEx
                 $installType = (Get-ItemProperty "HKLM:\$($hive)\Microsoft\Windows NT\CurrentVersion").InstallationType
@@ -2594,42 +2594,42 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
                 # ISSUE - do we want VL here?
                 #
                 $vhdFinalName = "$($buildLabEx)_$($skuFamily)_$($editionId)_$($openImage.ImageDefaultLanguage).$($VHDFormat.ToLower())"
-                Write-W2VTrace "$VHDFormat final name is : $vhdFinalName"
+                Write-W2VTrace "$VHDFormat 最終名稱是 : $vhdFinalName"
             }
 
             if ($hyperVEnabled) {
-                Write-W2VInfo "Dismounting $VHDFormat..."
+                Write-W2VInfo "卸載 $VHDFormat..."
                 Dismount-VHD -Path $VHDPath
             } else {
-                Write-W2VInfo "Closing $VHDFormat..."
+                Write-W2VInfo "關閉 $VHDFormat..."
                 Dismount-DiskImage -ImagePath $VHDPath
             }
 
             $vhdFinalPath = Join-Path (Split-Path $VHDPath -Parent) $vhdFinalName
-            Write-W2VTrace "$VHDFormat final path is : $vhdFinalPath"
+            Write-W2VTrace "$VHDFormat 最終路徑是 : $vhdFinalPath"
 
             if (Test-Path $vhdFinalPath) {
-                Write-W2VInfo "Deleting pre-existing $VHDFormat : $(Split-Path $vhdFinalPath -Leaf)..."
+                Write-W2VInfo "刪除現有 $VHDFormat : $(Split-Path $vhdFinalPath -Leaf)..."
                 Remove-Item -Path $vhdFinalPath -Force
             }
 
-            Write-W2VTrace -text "Renaming $VHDFormat at $VHDPath to $vhdFinalName"
+            Write-W2VTrace -text "重命名 $VHDFormat 在 $VHDPath 到 $vhdFinalName"
             Rename-Item -Path (Resolve-Path $VHDPath).Path -NewName $vhdFinalName -Force
             $vhd += Get-DiskImage -ImagePath $vhdFinalPath
 
             $vhdFinalName = $null
         } catch {
             Write-W2VError $_
-            Write-W2VInfo "Log folder is $logFolder"
+            Write-W2VInfo "日誌文件夾是 $logFolder"
         } finally {
             # If we still have a WIM image open, close it.
             if ($openWim -ne $null) {
-                Write-W2VInfo "Closing Windows image..."
+                Write-W2VInfo "關閉 Windows 映像檔..."
                 $openWim.Close()
             }
             # If we still have a registry hive mounted, dismount it.
             if ($mountedHive -ne $null) {
-                Write-W2VInfo "Closing registry hive..."
+                Write-W2VInfo "關閉註冊表 Hive..."
                 Dismount-RegistryHive -HiveMountPoint $mountedHive
             }
             # If VHD is mounted, unmount it
@@ -2644,7 +2644,7 @@ You can use the fields below to configure the VHD or VHDX that you want to creat
             }
             # If we still have an ISO open, close it.
             if ($openIso -ne $null) {
-                Write-W2VInfo "Closing ISO..."
+                Write-W2VInfo "關閉 ISO..."
                 Dismount-DiskImage $ISOPath
             }
             if (-not $CacheSource) {
@@ -3511,7 +3511,7 @@ function Get-WindowsCompatibleOS {
         $Global:ServerOS = $($build.ProductName -like 'Windows Server 2022*')
         return $true
     } else {
-        Write-Warning "Only Windows 10 20H1 or Windows 11 or Server 2022 is supported"
+        Write-Warning "僅支援 Windows 10 20H1 或 Windows 11 或 Server 2022"
     }
 }
 #========================================================================
@@ -3521,7 +3521,7 @@ function Get-HyperVEnabled {
     if ((Get-WindowsOptionalFeature -Online | Where-Object FeatureName -Like 'Microsoft-Hyper-V-All') -or (Get-WindowsOptionalFeature -Online | Where-Object FeatureName -Like 'Microsoft-Hyper-V-Online')) {
         return $true
     } else {
-        Write-Warning "You need to enable Virtualisation in your motherboard and then add the Hyper-V Windows Feature and reboot"
+        Write-Warning "您需要在主板上啟用虛擬化，然後添加 Hyper-V Windows 功能並重新啟動"
         return $false
     }
 }
@@ -3530,7 +3530,7 @@ function Get-HyperVEnabled {
 #========================================================================
 function Get-WSLEnabled {
     if ((wsl -l -v)[2].length -gt 1 ) {
-        Write-Warning "WSL is Enabled. This may interferre with GPU-P and produce an error 43 in the VM"
+        Write-Warning "WSL 已啟用。這可能會干擾 GPU-P 並在 VM 中產生錯誤 43"
         return $true
     } else {
         return $false
@@ -3542,7 +3542,7 @@ function Get-WSLEnabled {
 function Get-VMAvailable {
     $VMs = Get-VM
     if ($VMs.length -eq 0) {
-        Write-Host "There is no an available VM to proceed. Create a VM and run script again" -ForegroundColor Yellow
+        Write-Host "沒有可用的 VM 可以繼續。創建一個 VM 並再次運行腳本" -ForegroundColor Yellow
         return $false
     } else {
         return $true
@@ -3560,8 +3560,8 @@ function Get-VMGpuPartitionAdapterFriendlyName {
             $params.GPUName = (Get-WmiObject Win32_PNPSignedDriver | where {($_.HardwareID -eq "PCI\$($DeviceID)")}).DeviceName    
             return $PassingThroguhRequired
         } catch {
-            Write-Warning "There is no a GPU passed through to $($Global:VM.Name)."
-            $VMParam = New-VMParameter -name 'Null' -title "Pass through GPU to VM and copy host drivers? [Y/N]" -AllowedValues @{Y = $true; N = $false}
+            Write-Warning "沒有通過 GPU 到 $($Global:VM.Name)."
+            $VMParam = New-VMParameter -name 'Null' -title "通過 GPU 到 VM 並複製主機驅動程序? [Y/N]" -AllowedValues @{Y = $true; N = $false}
             if ((Get-VMParam -VMParam $VMParam) -eq $true) {
                 $PassingThroguhRequired = $true
             } else {
@@ -3571,16 +3571,16 @@ function Get-VMGpuPartitionAdapterFriendlyName {
     }
     $Devices = (Get-WmiObject -Class "Msvm_PartitionableGpu" -ComputerName $env:COMPUTERNAME -Namespace "ROOT\virtualization\v2").name
     $GPUs = New-Object System.Collections.Generic.List[System.Object]
-    Write-Host "Printing a list of compatible GPUs... It may take a while..." -ForegroundColor Yellow
+    Write-Host "列出兼容的 GPU... 這可能需要一段時間..." -ForegroundColor Yellow
     $i = 0
     $GPUs.Add("AUTO")
-    Write-Host "0: AUTO"
+    Write-Host "0: 自動選擇(AUTO)"
     foreach ($GPU in $Devices) {
         $GPUname = (Get-WmiObject Win32_PNPSignedDriver | where {($_.HardwareID -eq "PCI\$($GPU.Split('#')[1])")}).DeviceName 
         Write-Host "$([string](++$i)): $($GPUname)"
         $GPUs.Add($GPUname);
     }
-    $m = "Select GPU ID [default: 0] (press `"Return`" to default)"
+    $m = "選擇 GPU ID [預設: 0] (按 `"Return`" 預設)"
     while ($true) {
         try {
             $s = Read-Host -Prompt $m
@@ -3604,12 +3604,12 @@ function Get-VMGpuPartitionAdapterFriendlyName {
 function Get-VMObjects {
     $VMs = New-Object System.Collections.Generic.List[System.Object]
     $i = 0
-    Write-Host "Printing a list of VMs..." -ForegroundColor Yellow
+    Write-Host "列出 VM..." -ForegroundColor Yellow
     Foreach ($VM in Get-VM) {
         Write-Host "$([string](++$i)): $($VM.Name)"
         $VMs.Add($VM) 
     }
-    $m = "Select VM ID from 1 to $($i)"
+    $m = "選擇 VM ID 從 1 到 $($i)"
     while ($true) {
         try {
             $s = Read-Host -Prompt $m
@@ -3626,10 +3626,10 @@ function Get-VMObjects {
     $Global:StateWasRunning = $Global:VM.state -eq "Running"
 	
     if ($Global:VM.state -ne "Off") {
-        Write-Host "Attemping to shutdown VM"
+        Write-Host "嘗試關閉 VM"
         Stop-VM -Name $Global:VM.Name -Force -ErrorAction SilentlyContinue
         While ((Get-VM $Global:VM.Name).State -ne "Off") {
-            Write-W2VInProgress "Waiting for VM to shutdown - make sure there are no unsaved documents"
+            Write-W2VInProgress "等待 VM 關閉 - 確保沒有未保存的文檔"
             Start-Sleep -s 1
         }
         Stop-VM -Name $Global:VM.Name -TurnOff -Force -ErrorAction SilentlyContinue
@@ -3659,7 +3659,7 @@ function Add-VMGpuPartitionAdapterFiles {
     }
     # Get Third Party drivers used, that are not provided by Microsoft and presumably included in the OS
 
-    Write-W2VInfo "Finding and copying driver files for $GPUName to VM. This could take a while..."
+    Write-W2VInfo "查找並複製 $GPUName 的驅動程序文件到 VM。這可能需要一段時間..."
 
     $Drivers = Get-WmiObject Win32_PNPSignedDriver | where {$_.DeviceName -eq "$GPUName"}
 
@@ -3713,10 +3713,10 @@ function Add-VMGpuPartitionAdapterFiles {
 #========================================================================
 function Copy-GPUDrivers {
     param()
-    Write-Host "`r`nMounting Drive..."
+    Write-Host "`r`n掛載驅動..."
     $params.DriveLetter = (Mount-VHD -Path $Global:VHD.Path -PassThru | Get-Disk | Get-Partition | Get-Volume | Where-Object {$_.DriveLetter} | ForEach-Object DriveLetter) | where { Test-Path "$_`:\Windows\System32" }
     Add-VMGpuPartitionAdapterFiles -DriveLetter $params.DriveLetter -GPUName $params.GPUName
-    Write-Host "Dismounting Drive..."
+    Write-Host "卸載驅動..."
     Dismount-VHD -Path $Global:VHD.Path
 }
 #========================================================================
@@ -3771,14 +3771,14 @@ function Pass-VMGPUPartitionAdapter {
 #========================================================================
 function Get-Action {
     param()
-    Write-Host "`r`nAvailable actions:" -ForegroundColor Yellow
-    Write-Host "1: Create new VM with GPU acceleration"
-    Write-Host "2: Pass through GPU acceleration to HyperV VM (GPU drivers are copied automatically)"
-    Write-Host "3: Upgrade VMs GPU Drivers"
-    Write-Host "4: Remove GPU acceleration from HyperV VM"
-    Write-Host "5: Change dedicated resources percentage of passed through GPU"
-    Write-Host "6: Exit"
-    $m = "`r`nSelect an action from 1 to 6"
+    Write-Host "`r`n可用操作:" -ForegroundColor Yellow
+    Write-Host "1: 建立具有 GPU 加速功能的新虛擬機"
+    Write-Host "2: 將 GPU 加速功能傳遞給 HyperV 虛擬機 (GPU 驅動程式會自動複製)"
+    Write-Host "3: 升級虛擬機的 GPU 驅動程式"
+    Write-Host "4: 從 HyperV 虛擬機移除 GPU 加速功能"
+    Write-Host "5: 變更已傳遞 GPU 的專用資源百分比"
+    Write-Host "6: 離開"
+    $m = "`r`n請選擇操作 1 到 6"
     while ($true) {
         try {
             $s = Read-Host -Prompt $m
@@ -3801,11 +3801,11 @@ function Get-Action {
 #========================================================================
 function Get-RemoteDesktopApp {
     param()
-    Write-Host "Available Remote Desktop apps:" -ForegroundColor Yellow
-    Write-Host "1: Parsec (proprietary app mostly for gaming)"
-    Write-Host "2: RDP (less performance 3D Acceleration than Parsec provides)"
+    Write-Host "可用的遠程桌面應用程序:" -ForegroundColor Yellow
+    Write-Host "1: Parsec (遊戲專用遠端程式)"
+    Write-Host "2: RDP (比 Parsec 提供的 3D 加速性能更低)"
     Write-Host "3: Parsec & RDP"
-    Write-Host "4: None of them"
+    Write-Host "4: 沒有"
     if (($params.Parsec -eq $true) -and ($params.RDP -eq $false)) {
         $d = 1
     } elseif (($params.Parsec -eq $false) -and ($params.RDP -eq $true)) {
@@ -3815,8 +3815,8 @@ function Get-RemoteDesktopApp {
     } else {
         $d = 4
     }
-    $m = "Select an app you're going to use in VM [default: $d] (Press `"Return`" to default}"
-    while ($true) {
+        $m = "選擇您將在 VM 中使用的應用程序 [預設: $d] (按 `"Return`" 預設)"
+        while ($true) {
         try {
             $s = Read-Host -Prompt $m
             if (([decimal]($s) -ge 1) -and ([decimal]($s) -le 4) -and ($s.length -ne 0)) {
@@ -3851,20 +3851,20 @@ function Set-ServerOSGroupPolicies {
 #========================================================================
 function Open-ISOImageDialog {
     param()
-    Write-Host "A GUI dialog is available to help you select the Gest OS Windows disk image ISO." 
+    Write-Host "一個 GUI 對話框可用於幫助您選擇 Windows 磁盤映像 ISO。" 
     Add-Type -AssemblyName System.Windows.Forms
     
     $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog
     $FileBrowser.Filter = "Windows Disk Image (ISO)|*.iso"
     $FileBrowser.RestoreDirectory = $true
     $FileBrowser.MultiSelect = $false;
-    $FileBrowser.Title = "Select Windows Disk Image ISO for VM Guest OS"
+    $FileBrowser.Title = "選擇 Windows 磁盤映像 ISO 用於 VM 客戶端操作系統"
     
     if ($FileBrowser.ShowDialog() -eq "OK") {
         $params.SourcePath = $FileBrowser.FileName -replace "\[", "``[" -replace "\]", "``]" 
-        Write-Host "Windows Disk Image (ISO) path: ""$($FileBrowser.FileName)"""
+        Write-Host "Windows Disk Image (ISO) 路徑: ""$($FileBrowser.FileName)"""
     } else {
-        Write-Warning "Error: You have to select Guest OS Windows Disk Image ISO."
+        Write-Warning "錯誤: 您必須選擇 Windows 磁盤映像 ISO。"
         SmartExit
     }
 	return $params.SourcePath
@@ -3877,17 +3877,17 @@ function Open-VHDFolderDialog {
     Add-Type -AssemblyName System.Windows.Forms
     
     $FolderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
-    $FolderBrowser.Description = "Select VM virtual hard disk location"
+    $FolderBrowser.Description = "選擇 VM 虛擬硬盤位置"
     $FolderBrowser.RootFolder = "MyComputer"
     $FolderBrowser.SelectedPath = Get-VMHost | Select-Object VirtualHardDiskPath -ExpandProperty VirtualHardDiskPath
       
     if ($FolderBrowser.ShowDialog() -eq "OK") {
         $params.VHDPath = "$($FolderBrowser.SelectedPath)\$($params.VMName)\Virtual Hard Disks"
     } else {
-        Write-Warning "You didn't select VM virtual hard disk location. Default is used"
+        Write-Warning "您沒有選擇 VM 虛擬硬盤位置。預設使用"
         $params.VHDPath = Get-VMHost | Select-Object VirtualHardDiskPath -ExpandProperty VirtualHardDiskPath
     } 
-    Write-W2VInfo "VM virtual hard disk location: ""$($params.VHDPath)""" -ForegroundColor Yellow   
+    Write-W2VInfo "VM 虛擬硬盤位置: ""$($params.VHDPath)""" -ForegroundColor Yellow   
 }
 #========================================================================
 
@@ -3897,17 +3897,17 @@ function Open-VMFolderDialog {
     Add-Type -AssemblyName System.Windows.Forms
     
     $FolderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
-    $FolderBrowser.Description = "Select Virtual Machine files location"
+    $FolderBrowser.Description = "選擇 VM 文件位置"
     $FolderBrowser.RootFolder = "MyComputer"
     $FolderBrowser.SelectedPath = Get-VMHost | Select-Object VirtualMachinePath -ExpandProperty VirtualMachinePath
     
     if ($FolderBrowser.ShowDialog() -eq "OK") {
         $params.VMPath = $FolderBrowser.SelectedPath
     } else {
-        Write-Warning "You didn't select Virtual Machine files location. Default is used."
+        Write-Warning "您沒有選擇 VM 文件位置。預設使用"
         $params.VMPath = Get-VMHost | Select-Object VirtualMachinePath -ExpandProperty VirtualMachinePath
     }   
-    Write-W2VInfo "Virtual Machine files location: ""$($params.VMPath)\$($params.VMName)""" -ForegroundColor Yellow
+    Write-W2VInfo "VM 文件位置: ""$($params.VMPath)\$($params.VMName)""" -ForegroundColor Yellow
 }
 #========================================================================
 
@@ -3915,26 +3915,32 @@ function Open-VMFolderDialog {
 function Get-GuestOSCredentials{
     param()
     while ($true) {
-        [string]$UserName = Read-Host -Prompt "Enter username"
+        [string]$UserName = Read-Host -Prompt "輸入用戶名"
         if ($UserName.length -eq 0) {
-            Write-Warning "username can't be empty"
+            Write-Warning "用戶名不能為空"
         } else {
             break;
         }
     }
     while ($true) {
-        $SecurePassword = Read-Host -Prompt "Enter password" -AsSecureString
+        $SecurePassword = Read-Host -Prompt "輸入密碼" -AsSecureString
         $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
         $PlainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
         
-        $ReenteredSecurePassword = Read-Host -Prompt "Reenter password" -AsSecureString
+        # 檢查空密碼
+        if ($PlainPassword.length -eq 0) {
+            Write-Warning "密碼不能為空"
+            continue
+        }
+        
+        $ReenteredSecurePassword = Read-Host -Prompt "重新輸入密碼" -AsSecureString
         $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($ReenteredSecurePassword)
         $ReenteredPlainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
         
         if ($PlainPassword -eq $ReenteredPlainPassword) {
             break
         } else {
-            Write-Warning "password confirmation doesn't match"
+            Write-Warning "密碼確認不匹配"
         }
     } 
     $params.UserName = $UserName
@@ -3946,9 +3952,9 @@ function Get-GuestOSCredentials{
 function Get-VMName {
     param()
     while ($true) {
-        [string]$VMName = Read-Host -Prompt "Enter Virtual Machine name"
+        [string]$VMName = Read-Host -Prompt "輸入 VM 名稱"
         if ($VMName.length -eq 0) {
-            Write-Warning "Virtual Machine name can't be empty"
+            Write-Warning "VM 名稱不能為空"
         } else {
             break;
         }
@@ -3960,7 +3966,7 @@ function Get-VMName {
 #========================================================================
 function Get-GPUDedicatedResourcePercentage {
     param()
-    $VMParam = New-VMParameter -name 'GPUDedicatedResourcePercentage' -title "Specify the percentage of dedicated VM GPU resource to pass [default: $($params.GPUDedicatedResourcePercentage)] (press `"Return`" to default)" -range @(5, 100) -AllowNull
+    $VMParam = New-VMParameter -name 'GPUDedicatedResourcePercentage' -title "指定 VM GPU 專用資源百分比 [預設: $($params.GPUDedicatedResourcePercentage)] (按 `"Return`" 預設)" -range @(5, 100) -AllowNull
     $null = Get-VMParam -VMParam $VMParam  
 }
 #========================================================================
@@ -3968,23 +3974,23 @@ function Get-GPUDedicatedResourcePercentage {
 #========================================================================
 function Get-HyperVSwitchAdapter {
     param()
-    Write-Host "Available Virtual Network Switches..." -ForegroundColor Yellow
+    Write-Host "可用的虛擬網絡交換機..." -ForegroundColor Yellow
     $Switches = Get-VMSwitch | Select-Object -Property SwitchType, Name
     $count = 0
     $Switches | %{$count++}
     switch ($count) {
         0 { $Name = 'Default Switch'
-            Write-Warning "There isn't any Virtual Network Switch" 
+            Write-Warning "沒有可用的虛擬網絡交換機" 
             break }
         1 { $Name = $Switches[0].Name
-            Write-W2VInfo "There is only one Virtual Network Switch: $($Switches[0] | Select-Object -Property Name -ExpandProperty Name)" 
+            Write-W2VInfo "只有一個虛擬網絡交換機: $($Switches[0] | Select-Object -Property Name -ExpandProperty Name)" 
             break }
         default { 
             $i = 0
             foreach ($switch in $Switches) {
                 Write-Host "$([string](++$i)): [$($switch | Select-Object -Property Name -ExpandProperty SwitchType)] $($switch | Select-Object -Property Name -ExpandProperty Name)"
             }
-            $VMParam = New-VMParameter -name 'VSIndex' -title "Select Virtual Network Switch (press `"Return`" to default)" -range @(1, $Count + 1) -rangeIsHidden -AllowNull
+            $VMParam = New-VMParameter -name 'VSIndex' -title "選擇虛擬網絡交換機 (按 `"Return`" 預設)" -range @(1, $Count + 1) -rangeIsHidden -AllowNull
             $s = Get-VMParam -VMParam $VMParam
             if ($s.length -eq 0) {
                 $Name = 'Default Switch'
@@ -4005,7 +4011,7 @@ function Set-CorrectHyperVSwitchAdapterDialog {
     )
     $Switch = Get-VMSwitch | Where-Object Name -eq $Name
     if (($Name -ne 'Default Switch') ) {
-        $VMParam = New-VMParameter -name 'VMChangeQuery' -title "Set Virtual Network switch to external bridged network mode [Y/N] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+        $VMParam = New-VMParameter -name 'VMChangeQuery' -title "設置虛擬網絡交換機為外部橋接網絡模式 [Y/N] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
         $result = Get-VMParam -VMParam $VMParam
         if ($result -eq $true) {
             Set-CorrectHyperVExternalSwitchAdapter -Name $Name -SuspendOutput
@@ -4028,10 +4034,10 @@ function Set-CorrectHyperVExternalSwitchAdapter {
         try {
             Set-VMSwitch $externalswitch.Name -NetAdapterName $connectedadapter.Name -AllowManagementOS:$true -ErrorAction Stop
             if ($suspendOutput -ne $true) {
-                Write-Host ("Reconfiguring External Hyper-V Switch {0} to use Network Adapter {1}" -f $Name, $connectedadapter.Name) -ForegroundColor Green
+                Write-Host ("重新配置外部 Hyper-V 交換機 {0} 使用網絡適配器 {1}" -f $Name, $connectedadapter.Name) -ForegroundColor Green
             }
         } catch {
-            Write-Warning ("Failed reconfiguring External Hyper-V Switch {0} to use Network Adapter {1}" -f $Name, $connectedadapter.Name)
+            Write-Warning ("重新配置外部 Hyper-V 交換機 {0} 使用網絡適配器 {1} 失敗" -f $Name, $connectedadapter.Name)
         }
     }
 }
@@ -4071,14 +4077,14 @@ function Get-VMParam {
             $max = $VMParam.range[1] / 1Gb
             $mul = 1Gb
             if ($VMParam.rangeIsHidden -ne $true) {
-                $VMParam.title += ' [range:' + $min + 'GB...' + $max + 'GB]'
+                $VMParam.title += ' [範圍:' + $min + 'GB...' + $max + 'GB]'
             }
         } else {
             $min = $VMParam.range[0]
             $max = $VMParam.range[1]
             $mul = 1
             if ($VMParam.rangeIsHidden -ne $true) {
-                $VMParam.title += ' [range:' + $min + '...' + $max + ']' 
+                $VMParam.title += ' [範圍:' + $min + '...' + $max + ']' 
             }
         }   
     } else {
@@ -4146,36 +4152,36 @@ function Get-VMParams {
 
     Get-VMName
     
-    Write-Host "Virtual Machine files location: ""$(Get-VMHost | Select-Object VirtualMachinePath -ExpandProperty VirtualMachinePath)""" -ForegroundColor Yellow
-    $VMParam = New-VMParameter -name 'Null' -title "Change default Virtual Machine files location? [Y/N] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+    Write-Host "VM 文件位置: ""$(Get-VMHost | Select-Object VirtualMachinePath -ExpandProperty VirtualMachinePath)""" -ForegroundColor Yellow
+    $VMParam = New-VMParameter -name 'Null' -title "更改預設 VM 文件位置? [Y/N] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     if ((Get-VMParam -VMParam $VMParam) -eq $true) {
         $null = Open-VMFolderDialog
     } else {
         $params.VMPath = Get-VMHost | Select-Object VirtualMachinePath -ExpandProperty VirtualMachinePath
     }
 
-    Write-Host "VM virtual hard disk location: ""$(Get-VMHost | Select-Object VirtualHardDiskPath -ExpandProperty VirtualHardDiskPath)""" -ForegroundColor Yellow
-    $VMParam = New-VMParameter -name 'Null' -title "Change default VM virtual hard disk location? [Y/N] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+    Write-Host "VM 虛擬硬碟位置: ""$(Get-VMHost | Select-Object VirtualHardDiskPath -ExpandProperty VirtualHardDiskPath)""" -ForegroundColor Yellow
+    $VMParam = New-VMParameter -name 'Null' -title "更改預設 VM 虛擬硬碟位置? [Y/N] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     if ((Get-VMParam -VMParam $VMParam) -eq $true) {
         $null = Open-VHDFolderDialog
     } else {
         $params.VHDPath = Get-VMHost | Select-Object VirtualHardDiskPath -ExpandProperty VirtualHardDiskPath
     } 
     
-    $VMParam = New-VMParameter -name 'SizeBytes' -title "Specify VM virtual hard disk size [default: $($params.SizeBytes / 1Gb)GB] (press `"Return`" to default)" -range @(24Gb, 1024Gb) -AllowNull
+    $VMParam = New-VMParameter -name 'SizeBytes' -title "指定 VM 虛擬硬碟大小 [預設: $($params.SizeBytes / 1Gb)GB] (按 `"Return`" 預設)" -range @(24Gb, 1024Gb) -AllowNull
     $null = Get-VMParam -VMParam $VMParam
     
-    $VMParam = New-VMParameter -name 'MemoryAmount' -title "Specify amount of RAM dedicated for VM [default: $($params.MemoryAmount / 1Gb)GB] (press `"Return`" to default)" -range @(2Gb, (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).sum) -AllowNull
+    $VMParam = New-VMParameter -name 'MemoryAmount' -title "指定 VM 專用 RAM 大小 [預設: $($params.MemoryAmount / 1Gb)GB] (按 `"Return`" 預設)" -range @(2Gb, (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).sum) -AllowNull
     $null = Get-VMParam -VMParam $VMParam
     
-    $VMParam = New-VMParameter -name 'DynamicMemoryEnabled' -title "Enable Dynamic Memory? [Y/N] [default: $(BoolToYesNo $params.DynamicMemoryEnabled)] (press `"Return`" to enable)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+    $VMParam = New-VMParameter -name 'DynamicMemoryEnabled' -title "啟用動態記憶體? [Y/N] [預設: $(BoolToYesNo $params.DynamicMemoryEnabled)] (按 `"Return`" 啟用)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     $null = Get-VMParam -VMParam $VMParam
     if ($params.DynamicMemoryEnabled -eq $true) {
-        $VMParam = New-VMParameter -name 'MemoryMaximum' -title "Specify maximum amount of dynamic RAM dedicated for VM [default: $(($params.MemoryMaximum / 1Gb))GB] (press `"Return`" to default)" -range @($params.MemoryAmount, 128Gb) -AllowNull
+        $VMParam = New-VMParameter -name 'MemoryMaximum' -title "指定 VM 動態記憶體最大大小 [預設: $(($params.MemoryMaximum / 1Gb))GB] (按 `"Return`" 預設)" -range @($params.MemoryAmount, 128Gb) -AllowNull
         $null = Get-VMParam -VMParam $VMParam
     }
 
-    $VMParam = New-VMParameter -name 'CPUCores' -title "Specify Number of virtual proccesosrs [default: $($params.CPUCores)] (press `"Return`" to default)" -range @(1, (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors) -AllowNull
+    $VMParam = New-VMParameter -name 'CPUCores' -title "指定 VM 虛擬處理器數量 [預設: $($params.CPUCores)] (按 `"Return`" 預設)" -range @(1, (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors) -AllowNull
     $null = Get-VMParam -VMParam $VMParam
  
     $switch = Get-HyperVSwitchAdapter
@@ -4184,13 +4190,13 @@ function Get-VMParams {
     $null = Get-VMGpuPartitionAdapterFriendlyName
     $null = Get-GPUDedicatedResourcePercentage 
     
-    Write-Host "Guest OS Parameters:"  -ForegroundColor Yellow
+    Write-Host "客戶端參數:"  -ForegroundColor Yellow
 	$null = Open-ISOImageDialog 
  	$params.DriveLetter = Mount-ISOReliable -SourcePath $params.SourcePath 
 
     $Editions = Get-ISOWindowsEditions -DriveLetter $params.DriveLetter
     if ($null -ne $Editions) {
-        $VMParam = New-VMParameter -name 'Edition' -title "Select Index of the Windows Edition [default: $($Editions.Count)] (press `"Return`" to skip)" -range @(1, $Editions.Count) -AllowNull $true
+        $VMParam = New-VMParameter -name 'Edition' -title "選擇 Windows 版本 [預設: $($Editions.Count)] (按 `"Return`" 跳過)" -range @(1, $Editions.Count) -AllowNull $true
         $null = Get-VMParam -VMParam $VMParam
     } else {
         $param.Edition = 0
@@ -4198,28 +4204,28 @@ function Get-VMParams {
 	
     $null = Get-GuestOSCredentials
     
-    $VMParam = New-VMParameter -name 'Autologon' -title "Enable Autologon to Guest OS? [Y/N] [default: $(BoolToYesNo $params.Autologon)] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+    $VMParam = New-VMParameter -name 'Autologon' -title "啟用自動登錄到客戶端? [Y/N] [預設: $(BoolToYesNo $params.Autologon)] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     $null = Get-VMParam -VMParam $VMParam
  
-    $VMParam = New-VMParameter -name 'CopyRegionalSettings' -title "Copy Host OS regional settings (locale, keyboard layout etc.) to Guest OS? [Y/N] [default: Y] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+    $VMParam = New-VMParameter -name 'CopyRegionalSettings' -title "複製主機操作系統區域設置 (區域、鍵盤佈局等) 到客戶端? [Y/N] [預設: Y] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     $null = Get-VMParam -VMParam $VMParam
 
-    $VMParam = New-VMParameter -name 'NumLock' -title "Enable NumLock at Logon? [Y/N] [default: $(BoolToYesNo $params.NumLock)] (press `"Return`" to enable)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+    $VMParam = New-VMParameter -name 'NumLock' -title "啟用 NumLock 自動登錄? [Y/N] [預設: $(BoolToYesNo $params.NumLock)] (按 `"Return`" 啟用)" -AllowedValues @{Y = $true; N = $false} -AllowNull
     $null = Get-VMParam -VMParam $VMParam 
 
     Get-RemoteDesktopApp
     if ($params.Parsec -eq $true) { 
-        $VMParam = New-VMParameter -name 'ParsecVDD' -title "Install Parsec Virtual Display Driver? [Y/N] [default: $(BoolToYesNo $params.ParsecVDD)] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+        $VMParam = New-VMParameter -name 'ParsecVDD' -title "安裝 Parsec 虛擬顯示驅動? [Y/N] [預設: $(BoolToYesNo $params.ParsecVDD)] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
         if ((Get-VMParam -VMParam $VMParam) -eq $true) {
-            $VMParam = New-VMParameter -name 'DisableHVDD' -title "Disable Hyper-V Display Driver? [Y/N] [default: $(BoolToYesNo $params.DisableHVDD)] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+            $VMParam = New-VMParameter -name 'DisableHVDD' -title "禁用 Hyper-V 顯示驅動? [Y/N] [預設: $(BoolToYesNo $params.DisableHVDD)] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
             $null = Get-VMParam -VMParam $VMParam
         }
-        $VMParam = New-VMParameter -name 'ParsecForTeamsSubscriber' -title "Are you are a Parsec for Teams Subscriber? [Y/N] [default: N] (press `"Return`" to skip)" -AllowedValues @{Y = $true; N = $false} -AllowNull
+        $VMParam = New-VMParameter -name 'ParsecForTeamsSubscriber' -title "你是 Parsec for Teams 訂閱者嗎? [Y/N] [預設: N] (按 `"Return`" 跳過)" -AllowedValues @{Y = $true; N = $false} -AllowNull
         if ((Get-VMParam -VMParam $VMParam) -eq 0) {
-            $VMParam = New-VMParameter -name 'Team_ID' -title "Enter the Parsec for Teams ID (press `"Return`" to skip)" -AllowNull
+            $VMParam = New-VMParameter -name 'Team_ID' -title "輸入 Parsec for Teams ID (按 `"Return`" 跳過)" -AllowNull
             $null = Get-VMParam -VMParam $VMParam
             
-            $VMParam = New-VMParameter -name 'Key' -title "Enter the Parsec for Teams Secret Key (press `"Return`" to skip)" -AllowNull
+            $VMParam = New-VMParameter -name 'Key' -title "輸入 Parsec for Teams 密鑰 (按 `"Return`" 跳過)" -AllowNull
             $null = Get-VMParam -VMParam $VMParam       
         }
     }
@@ -4240,14 +4246,14 @@ function Start-VMandConnect {
 #========================================================================
 #Script executing section
 Clear-Host
-Write-Host "System is checking ..." -ForegroundColor Yellow
+Write-Host "系統正在檢查中..." -ForegroundColor Yellow
 
 If ((Is-Administrator) -and (Get-WindowsCompatibleOS) -and (Get-HyperVEnabled)) {
-    Write-Host "Checking completed: " -NoNewline -ForegroundColor Yellow 
-    Write-Host "System is Compatible" -ForegroundColor DarkGreen 
+    Write-Host "檢查完成: " -NoNewline -ForegroundColor Yellow 
+    Write-Host "系統相容" -ForegroundColor DarkGreen 
     
     $Action = Get-Action
-    Write-Host "`r`nRequired parameters:" -ForegroundColor Yellow
+    Write-Host "`r`n所需參數:" -ForegroundColor Yellow
     
     switch ($Action) {
         1 { Get-VMParams
@@ -4275,35 +4281,35 @@ If ((Is-Administrator) -and (Get-WindowsCompatibleOS) -and (Get-HyperVEnabled)) 
     }
     
     If ($Global:StateWasRunning){
-        Write-Host "Previous State was running so starting VM..."
+        Write-Host "先前的狀態正在運行，因此正在啟動虛擬機..."
         Start-VMandConnect -Name $Global:VM.Name
     }
     
     if ($Action -eq 1) {
         Start-VMandConnect -Name $params.VMName
-        $m = "If all went well the Virtual Machine will have started, 
-            `rIn a few minutes it will load the Windows desktop." 
+        $m = "如果一切正常，虛擬機將已啟動，
+            `r在幾分鐘內將加載 Windows 桌面。" 
         if (($params.Parsec -eq $true) -and ($params.RDP -eq $false)) {
-            $m += "When it does, sign into Parsec (a fast remote desktop app)
-                `rand connect to the machine using Parsec from another computer. 
-                `rHave fun!
-                `rSign up to Parsec at https://Parsec.app"
+            $m += "當它完成時，登入 Parsec (一個快速遠程桌面應用程序)
+                `rand 使用 Parsec 從另一台計算機連接到機器。
+                `r玩得開心！
+                `r在 https://Parsec.app 註冊 Parsec"
         } elseif (($params.Parsec -eq $false) -and ($params.RDP -eq $true)) {
-            $m += "When it does, install Microsot Remote Desktop moder client
-                `rand connect to the machine using username and password you set. 
-                `rHave fun!
+            $m += "當它完成時，安裝 Microsoft Remote Desktop 客戶端
+                `rand 使用您設置的用戶名和密碼連接到機器。
+                `r玩得開心！
                 `rhttps://www.microsoft.com/store/productId/9WZDNCRFJ3PS"
         } elseif (($params.Parsec -eq $true) -and ($params.RDP -eq $true)) {
-            $m += "When it does, sign into Parsec (a fast remote desktop app)
-                `rand connect to the machine using Parsec from another computer. 
-                `ror install Microsot Remote Desktop moder client
-                `rand connect to the machine using username and password you set.
-                `rHave fun!
-                `rSign up to Parsec at https://Parsec.app
+            $m += "當它完成時，登入 Parsec (一個快速遠程桌面應用程序)
+                `r使用 Parsec 從另一台計算機連接到機器。
+                `r當它完成時，安裝 Microsoft Remote Desktop 客戶端
+                `r使用您設置的用戶名和密碼連接到機器。
+                `r玩得開心！
+                `r在 https://Parsec.app 註冊 Parsec
                 `rhttps://www.microsoft.com/store/productId/9WZDNCRFJ3PS"
         }
     } else {
-        $m = "Done..."
+        $m = "完成..."
     }
     SmartExit -ExitReason $m
 }
